@@ -1,3 +1,3 @@
-# Cesium Supermap Rest Demo
+# Cesium Dev
 
-A Demo loading `Supermap Rest Server` in `CesiumJS`.
+A monorepo includes a series of demos using CesiumJS.
