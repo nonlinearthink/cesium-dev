@@ -1,14 +1,71 @@
 import * as Cesium from "cesium";
 
 export class SupermapRestClient {
-  constructor(private url: string) {}
+  private catalogListUrl: string;
+  private staticResourceUrl: string | undefined;
+  private mapUrl: string | undefined;
 
-  async getCapabilities() {
-    const jsonResource = new Cesium.Resource(this.url + ".json");
+  constructor(catalogListUrl: string) {
+    this.catalogListUrl = catalogListUrl;
+  }
+
+  setStaticResourceUrl(url: string) {
+    this.staticResourceUrl = url;
+  }
+
+  setMapUrl(url: string) {
+    this.mapUrl = url;
+  }
+
+  async *doRequest() {
+    const catalogList = await SupermapRestClient.getCatalogList(this.catalogListUrl);
+    yield catalogList;
+    if (this.staticResourceUrl) {
+      const staticResourceList = await SupermapRestClient.getStaticResourceList(this.staticResourceUrl);
+      yield staticResourceList;
+      if (this.mapUrl) {
+        const capabilities = await SupermapRestClient.getCapabilities(this.mapUrl);
+        yield capabilities;
+      }
+    }
+  }
+
+  static async getCatalogList(url: string) {
+    const jsonResource = new Cesium.Resource(url + ".json");
+    const json = await jsonResource.fetchJson();
+    const list: { name: string; path: string }[] = [];
+    for (const item of json) {
+      if (item.resourceType === "CatalogList") {
+        list.push({
+          name: item.name,
+          path: item.path
+        });
+      }
+    }
+    return list;
+  }
+
+  static async getStaticResourceList(url: string) {
+    const jsonResource = new Cesium.Resource(url + ".json");
+    const json = await jsonResource.fetchJson();
+    const list: { name: string; path: string }[] = [];
+    for (const item of json) {
+      if (item.resourceType === "StaticResource") {
+        list.push({
+          name: item.name,
+          path: item.path
+        });
+      }
+    }
+    return list;
+  }
+
+  static async getCapabilities(url: string) {
+    const jsonResource = new Cesium.Resource(url + ".json");
     return await jsonResource.fetchJson();
   }
 
-  getTilingSchemeFromCapabilities(capabilities: any) {
+  static getTilingSchemeFromCapabilities(capabilities: any) {
     let tilingScheme: Cesium.TilingScheme;
     if (capabilities.prjCoordSys.epsgCode === 4326) {
       const rectangle = new Cesium.Rectangle(

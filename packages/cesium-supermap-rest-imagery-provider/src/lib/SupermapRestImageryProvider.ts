@@ -22,11 +22,9 @@ export class SupermapRestImageryProvider extends Cesium.UrlTemplateImageryProvid
   }
 
   static async fromUrl(url: string) {
-    const client = new SupermapRestClient(url);
+    const capabilities = await SupermapRestClient.getCapabilities(url);
 
-    const capabilities = await client.getCapabilities();
-
-    const tilingScheme = client.getTilingSchemeFromCapabilities(capabilities);
+    const tilingScheme = SupermapRestClient.getTilingSchemeFromCapabilities(capabilities);
 
     let originX: number;
     let originY: number;
