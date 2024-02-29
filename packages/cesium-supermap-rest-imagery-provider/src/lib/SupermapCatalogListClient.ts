@@ -1,7 +1,7 @@
 import * as Cesium from "cesium";
-import { SupermapCatalogListClient } from "./SupermapCatalogListClient";
+import { SupermapRestStaticResourceClient } from "./SupermapRestStaticResourceClient";
 
-export class SupermapRestClient {
+export class SupermapCatalogListClient {
   private _url: string;
 
   constructor(url: string) {
@@ -11,12 +11,12 @@ export class SupermapRestClient {
   async doRequest() {
     const resource = new Cesium.Resource(this._url + ".json");
     const json = await resource.fetchJson();
-    const resourceList: { name: string; client: SupermapCatalogListClient }[] = [];
+    const resourceList: { name: string; client: SupermapRestStaticResourceClient }[] = [];
     for (const item of json) {
-      if (item.resourceType === "CatalogList") {
+      if (item.resourceType === "StaticResource") {
         resourceList.push({
           name: item.name,
-          client: new SupermapCatalogListClient(item.path)
+          client: new SupermapRestStaticResourceClient(item.path)
         });
       }
     }

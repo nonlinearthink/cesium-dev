@@ -1,5 +1,5 @@
 import * as Cesium from "cesium";
-import { SupermapRestClient } from "./SupermapRestClient";
+import { SupermapRestStaticResourceClient } from "./SupermapRestStaticResourceClient";
 
 const WGS84Scales = [
   3.38032714321e-9, 6.76065428641e-9, 1.352130857282e-8, 2.704261714564e-8, 5.408523429128e-8, 1.0817046858257e-7,
@@ -21,34 +21,12 @@ export class SupermapRestImageryProvider extends Cesium.UrlTemplateImageryProvid
     super(options);
   }
 
-  static async fromUrl(url: string) {
-    const capabilities = await SupermapRestClient.getCapabilities(url);
+  static async fromSupermapRestStaticResourceClient(client: SupermapRestStaticResourceClient) {
+    const capabilities = await client.getCapabilities();
 
-    const tilingScheme = SupermapRestClient.getTilingSchemeFromCapabilities(capabilities);
+    const tilingScheme = client.getTilingSchemeFromCapabilities(capabilities);
 
-    let originX: number;
-    let originY: number;
-    if (tilingScheme instanceof Cesium.WebMercatorTilingScheme) {
-      originX = -20037508.342787;
-      originY = 20037508.342787;
-    } else {
-      originX = -180;
-      originY = 90;
-    }
-
-    const tileImageResource = new Cesium.Resource(url + "/tileImage.png");
-    tileImageResource.appendQueryParameters({
-      transparent: true,
-      cacheEnabled: true,
-      width: 256,
-      height: 256,
-      redirect: false,
-      overlapDisplayed: false,
-      origin: `{x:${originX},y:${originY}}`,
-      x: "{x}",
-      y: "{y}",
-      scale: "{scale}"
-    });
+    const tileImageResource = client.getTileImageResource(tilingScheme);
 
     return new SupermapRestImageryProvider({
       url: tileImageResource,
